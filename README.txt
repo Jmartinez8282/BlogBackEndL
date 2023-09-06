@@ -50,14 +50,14 @@ Model//folder
 
 
 ------------------------------ Items that will be saved to our data base DB are above --------------
-    LoginModel
+    LoginModelDTO
         string Username
         string password
-    CreateAccountModel
+    CreateAccountModelDTO
         int Id = 0
         string Username
         string password
-    passwordModel
+    passwordModelDTO
         string Salt 
         string Hash
 
