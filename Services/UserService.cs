@@ -6,17 +6,29 @@ using BlogBackEndL.Models;
 using BlogBackEndL.Models.DTO;
 using BlogBackEndL.Services.Context;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Reflection.Metadata.Ecma335;
 
 namespace BlogBackEndL.Services
 {
-    public class UserService
+    public class UserService : ControllerBase
     {
+
+
+
         //create a variable
         private readonly DataContext _context;
         //create a constructor
         public UserService(DataContext context) {
             _context = context;
         }
+        public IEnumerable<UserModel> GetAllUsers() {
+                return _context.UserInfo;
+            }
 
         //Helper function DoesUserExist(string username)
         public bool DoesUserExist(string? username) {
@@ -49,7 +61,7 @@ namespace BlogBackEndL.Services
 
                      var newHashedPassword = HashPassword(UserToAdd.Password);
 
-                     newUser.Id = UserToAdd.Id;
+                    //  newUser.Id = UserToAdd.Id;
 
                      newUser.Username = UserToAdd.Username;
 
@@ -58,7 +70,7 @@ namespace BlogBackEndL.Services
         //now need to add to our data base
                      _context.Add(newUser);
         //we need to save our changes
-                     _context.SaveChanges();
+                   result = _context.SaveChanges() != 0;
             }
             return result;
             //if they do not exsist we then need to add account
@@ -96,6 +108,65 @@ namespace BlogBackEndL.Services
             var rfc2898DeriveBytes = new Rfc2898DeriveBytes(Password, SaltBytes,10000);
             var newHash = Convert.ToBase64String(rfc2898DeriveBytes.GetBytes(256));
             return newHash == StoredHash;
+        }
+
+        public UserModel GetUserByUsername(string? username) {
+            return _context.UserInfo.SingleOrDefault(user => user.Username == username);
+        }
+
+        public UserModel GetUserByID(int ID)
+        {
+            return _context.UserInfo.SingleOrDefault(user => user.Id == ID);
+        }
+
+        public IActionResult Login(LoginDTO user)
+        {
+           IActionResult Result = Unauthorized();
+           if(DoesUserExist(user.Username))
+           {
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("superSecretKey@345"));
+            var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+            var tokeOptions = new JwtSecurityToken(
+                issuer: "https://localhost:5001",
+                audience: "https://localhost:5001",
+                claims: new List<Claim>(),
+                expires: DateTime.Now.AddMinutes(30),
+                signingCredentials: signinCredentials
+            );
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(tokeOptions);
+            Result = Ok(new { Token = tokenString });
+           }
+        return Result;
+        }
+
+        public bool DeleteUser(string Username)
+        {
+           //This one is sending over just the username
+           //Then you have to get the object and then update
+          UserModel foundUser = GetUserByUsername(Username);
+          bool result = false;
+            if(foundUser != null)
+            {
+                //found user
+                foundUser.Username = Username;
+                _context.Remove<UserModel>(foundUser);
+               result = _context.SaveChanges() != 0;
+            }
+            return result;
+
+        }
+
+        public bool UpdateUsername(int id, string Username)
+        {
+             UserModel foundUser = GetUserByID(id);
+             bool result = false;
+             if(foundUser != null)
+             {
+                foundUser.Username = Username;
+                _context.Update<UserModel>(foundUser);
+                result = _context.SaveChanges() != 0;
+             }
+             return result;
         }
     }
 }
