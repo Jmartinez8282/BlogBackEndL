@@ -19,7 +19,7 @@ builder.Services.AddDbContext<DataContext>(options => options.UseSqlServer(conne
 builder.Services.AddCors(options => {
     options.AddPolicy("BlogPolicy",
     builder => {
-        builder.WithOrigins("http://127.0.0.1:5173/")
+        builder.WithOrigins("http://127.0.0.1:5173")
         .AllowAnyHeader()
         .AllowAnyMethod();
     });
