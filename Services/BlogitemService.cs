@@ -78,5 +78,10 @@ namespace BlogBackEndL.Services
         {
             return _context.BlogInfo.Where(item => item.IsPublished);
         }
+
+        public IEnumerable<BlogitemModel> GetItemsByUserID(int userID)
+        {
+           return _context.BlogInfo.Where(item => item.UserId == userID);
+        }
     }
 }

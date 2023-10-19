@@ -179,5 +179,10 @@ namespace BlogBackEndL.Services
              return UserInfo;
 
         }
+
+        internal IEnumerable<BlogitemModel> GetItemsByUserID(int userID)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
